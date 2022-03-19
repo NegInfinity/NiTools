@@ -13,6 +13,10 @@
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
 
+#Editor user settings
+/[Uu]serSettings/EditorUserSettings.asset
+/[Uu]serSettings/
+
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # /[Aa]ssets/AssetStoreTools*
 
@@ -21,6 +25,9 @@
 
 # Visual Studio cache directory
 .vs/
+
+#Visual Studio Code directory
+.vscode/
 
 # Gradle cache directory
 .gradle/
