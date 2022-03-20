@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿/*
+This file implements a vector based "typeface" which can be used with a line drawing delegate to produce wireframe text.
+*/
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
