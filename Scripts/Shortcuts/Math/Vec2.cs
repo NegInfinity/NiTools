@@ -1,6 +1,6 @@
 using UnityEngine;
 
-using static NiTools.Shortcuts.Constructors;
+using static NiTools.Shortcuts.Constructors.FloatVectors;
 
 namespace NiTools.Shortcuts{
 using Vec2 = Vector2;
