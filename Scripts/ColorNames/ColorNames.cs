@@ -165,7 +165,7 @@ public enum ColorNames{
 	YellowGreen = 0x9ACD32
 }
 
-public static class ColorCodeExtensions{
+public static partial class ColorExtensions{
 	public static Color toColor(this ColorNames code, float alpha = 1.0f){
 		var result = (Color)code.toColor32();
 		result.a = alpha;
