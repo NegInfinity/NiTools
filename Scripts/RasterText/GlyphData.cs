@@ -10,10 +10,18 @@ public static partial class RasterText{
 		public string characters;
 		public Int[] data;
 		protected Dictionary<char, int> offsets = new();
-		public int getGlyphOffset(char c, int defaultVal = -1){
+
+		public int getGlyphIndex(char c, int defaultVal = -1){
 			int result;
 			if (offsets.TryGetValue(c, out result))
 				return result;
+			return defaultVal;
+		}
+
+		public int getGlyphOffset(char c, int defaultVal = -1){
+			int result;
+			if (offsets.TryGetValue(c, out result))
+				return result * glyphHeight;
 			return defaultVal;
 		}
 
@@ -21,7 +29,7 @@ public static partial class RasterText{
 			return offsets.ContainsKey(c);
 		}
 
-		void buildOffsets(int glyphSize){
+		void buildOffsets(){
 			offsets.Clear();
 			for(int i = 0; i < characters.Length; i++){
 				var c = characters[i];
@@ -29,7 +37,7 @@ public static partial class RasterText{
 					Debug.LogWarning($"duplicate character {c} in glyph");
 					continue;
 				}
-				offsets.Add(c, i * glyphSize);
+				offsets.Add(c, i);
 			}
 		}
 
@@ -38,7 +46,7 @@ public static partial class RasterText{
 			glyphHeight = glyphHeight_;
 			characters = characters_;
 			data = data_;
-			buildOffsets(glyphHeight);
+			buildOffsets();
 		}
 	}
 }
