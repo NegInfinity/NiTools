@@ -1,11 +1,10 @@
 using UnityEngine;
 
 namespace NiTools{
-using IntGlyphs = RasterText.GlyphData<int>;
 
 public static partial class RasterText{
 	//https://en.wikipedia.org/wiki/Code_page_866
-	public static readonly IntGlyphs cp866_16x16 = new IntGlyphs(
+	public static readonly GlyphData cp866_16x16 = new GlyphData(
 		16, 16, 
 		"☒☺☻♥♦♣♠•◘○◙♂♀♪♫☼" +
 		"►◄↕‼¶§▬↨↑↓→←∟↔▲▼" +

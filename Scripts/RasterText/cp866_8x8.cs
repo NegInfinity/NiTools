@@ -1,11 +1,11 @@
 using UnityEngine;
 
 namespace NiTools{
-using ByteGlyphs = RasterText.GlyphData<byte>;
 
 public static partial class RasterText{
 	//https://en.wikipedia.org/wiki/Code_page_866
-	public static readonly ByteGlyphs cp866_8x8 = new ByteGlyphs(8, 8,
+	public static readonly GlyphData cp866_8x8 = new GlyphData(
+		8, 8,
 		"☒☺☻♥♦♣♠•◘○◙♂♀♪♫☼" +
 		"►◄↕‼¶§▬↨↑↓→←∟↔▲▼" +
 		" !\"#$%&'()*+,-./" +

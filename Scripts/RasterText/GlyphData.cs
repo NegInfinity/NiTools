@@ -1,54 +1,136 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace NiTools{
 
 public static partial class RasterText{
-	public class GlyphData<Int>{
-		public int glyphWidth;
-		public int glyphHeight;
-		public string characters;
-		public Int[] data;
-		protected Dictionary<char, int> offsets = new();
 
-		public int getGlyphIndex(char c, int defaultVal = -1){
-			int result;
-			if (offsets.TryGetValue(c, out result))
-				return result;
-			return defaultVal;
-		}
+public class GlyphData{
+	protected int _glyphWidth;
+	protected int _glyphHeight;
+	protected int _numGlyphs;
+	protected string _characters;
+	protected Dictionary<char, int> _glyphIndexes = new();
+	protected BitArray _data;
 
-		public int getGlyphOffset(char c, int defaultVal = -1){
-			int result;
-			if (offsets.TryGetValue(c, out result))
-				return result * glyphHeight;
-			return defaultVal;
-		}
+	public int glyphWidth => _glyphWidth;
+	public int glyphHeight => _glyphHeight;
+	public string characters => _characters;
+	public int numGlyphs => _numGlyphs;
+	public int numGlyphBits => _glyphWidth * _glyphHeight;
+	public int numTotalBits => numGlyphs * numGlyphBits;
 
-		public bool hasGlyph(char c){
-			return offsets.ContainsKey(c);
-		}
+	public bool hasGlyph(char c){
+		return _glyphIndexes.ContainsKey(c);
+	}
 
-		void buildOffsets(){
-			offsets.Clear();
-			for(int i = 0; i < characters.Length; i++){
-				var c = characters[i];
-				if (offsets.ContainsKey(c)){
-					Debug.LogWarning($"duplicate character {c} in glyph");
-					continue;
-				}
-				offsets.Add(c, i);
+	public (int index, bool found) getGlyphIndex(char c, int defaultVal = 0){
+		int index;
+		if (_glyphIndexes.TryGetValue(c, out index))
+			return (index, true);
+		return (defaultVal, false);
+	}
+
+	/*
+	In source data, lowest bit is right-most pixel, and scanlines continue from up to down. 
+	This is a convention used in text modes.
+
+	However, within stored data, bits go from left to right, from top to bottom, glyph after glyph
+	*/
+	void initBitArray(int glyphWidth_, int glyphHeight_, int numGlyphs_){
+		_glyphWidth = glyphWidth_;
+		_glyphHeight = glyphHeight_;
+		_numGlyphs = numGlyphs_;
+		_data = new BitArray(numTotalBits, false);
+	}
+
+	void buildGlyphIndexes(string symbols_){
+		_characters = symbols_;
+		_glyphIndexes.Clear();
+		for(int i = 0; i < _characters.Length; i++){
+			if (!_glyphIndexes.TryAdd(_characters[i], i)){
+				Debug.LogWarning($"Duplicate symbol {_characters[i]} found at position {i}");
 			}
 		}
+	}
 
-		public GlyphData(int glyphWidth_, int glyphHeight_, string characters_, Int[] data_){
-			glyphWidth = glyphWidth_;
-			glyphHeight = glyphHeight_;
-			characters = characters_;
-			data = data_;
-			buildOffsets();
+	public bool isValidGlyphIndex(int glyphIndex){
+		return (glyphIndex >= 0) && (glyphIndex < numGlyphs);
+	}
+
+	public bool isValidGlyphCoord(int x, int y){
+		return (x >= 0) && (y >= 0) && (x < glyphWidth) && (y < glyphHeight);
+	}
+
+	public bool getRawBit(int bitOffset){
+		return _data[bitOffset];
+	}
+
+	public int getGlyphOffsetFromIndex(int index){
+		return index * numGlyphBits;
+	}
+
+	public int getGlyphXyOffset(int x, int y){
+		return x + y * glyphWidth;
+	}
+
+	public int getBitIndex(int glyphIndex, int x, int y){
+		return getGlyphOffsetFromIndex(glyphIndex) + getGlyphXyOffset(x, y);
+	}
+
+	public bool getGlyphBitByIndex(int glyphIndex, int x, int y){
+		if (!isValidGlyphIndex(glyphIndex) || !isValidGlyphCoord(x, y))
+			return false;
+		return _data[getBitIndex(glyphIndex, x, y)];
+	}
+
+	protected void _setGlyphBitByIndex(int glyphIndex, int x, int y, bool val){
+		if (!isValidGlyphIndex(glyphIndex) || !isValidGlyphCoord(x, y))
+			throw new System.ArgumentOutOfRangeException();
+		_data[getBitIndex(glyphIndex, x, y)] = val;
+	}
+
+	protected delegate bool BitTestDelegate<Val>(Val val, int bitIndex);
+	protected void loadVals<Val>(Val[] intData, BitTestDelegate<Val> bitTest){
+		int srcBaseOffset = 0;
+		int dstBaseOffset = 0;
+		for(int glyphIndex = 0; glyphIndex < numGlyphs; glyphIndex++){
+			int dstScanline = dstBaseOffset;
+			for(int y = 0; y < glyphHeight; y++){
+				var srcLine = intData[srcBaseOffset + y];
+				for(int x = 0; x < glyphWidth; x++){
+					var srcBitIndex = (glyphWidth - 1 - x);
+					_data[dstScanline + x] = bitTest(srcLine, srcBitIndex);
+				}
+				dstScanline += glyphHeight;
+			}
+			srcBaseOffset += glyphHeight;
+			dstBaseOffset += numGlyphBits;
 		}
 	}
+
+	protected void loadInts(int[] intData){
+		loadVals(intData, (val, bit) => ((1 << bit) & val) != 0);
+	}
+
+	protected void loadBytes(byte[] byteData){
+		loadVals(byteData, (val, bit) => ((1 << bit) & val) != 0);
+	}
+
+	public GlyphData(int glyphWidth_, int glyphHeight_, string symbols_, int[] srcData_){
+		initBitArray(glyphWidth_, glyphHeight_, symbols_.Length);
+		buildGlyphIndexes(symbols_);
+		loadInts(srcData_);
+	}
+
+	public GlyphData(int glyphWidth_, int glyphHeight_, string symbols_, byte[] srcData_){
+		initBitArray(glyphWidth_, glyphHeight_, symbols_.Length);
+		buildGlyphIndexes(symbols_);
+		loadBytes(srcData_);
+	}
+}
+
 }
 
 }
