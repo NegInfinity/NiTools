@@ -11,6 +11,7 @@ public class GlyphIndexes{
 	protected Dictionary<char, int> _indexes = new();
 	
 	public string glyphs => _glyphs;
+	public int numGlyphs => _glyphs.Length;
 
 	public bool hasGlyph(char c){
 		return _indexes.ContainsKey(c);
