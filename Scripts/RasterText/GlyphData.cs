@@ -10,27 +10,21 @@ public class GlyphData{
 	protected int _glyphWidth;
 	protected int _glyphHeight;
 	protected int _numGlyphs;
-	protected string _characters;
-	protected Dictionary<char, int> _glyphIndexes = new();
+
+	protected GlyphIndexes _glyphIndexes;
 	protected BitArray _data;
 
 	public int glyphWidth => _glyphWidth;
 	public int glyphHeight => _glyphHeight;
-	public string characters => _characters;
+	public string characters => _glyphIndexes.glyphs;
 	public int numGlyphs => _numGlyphs;
 	public int numGlyphBits => _glyphWidth * _glyphHeight;
 	public int numTotalBits => numGlyphs * numGlyphBits;
 
-	public bool hasGlyph(char c){
-		return _glyphIndexes.ContainsKey(c);
-	}
-
-	public (int index, bool found) getGlyphIndex(char c, int defaultVal = 0){
-		int index;
-		if (_glyphIndexes.TryGetValue(c, out index))
-			return (index, true);
-		return (defaultVal, false);
-	}
+	public GlyphIndexes glyphIndexes => _glyphIndexes;
+	public bool hasGlyph(char c) => _glyphIndexes.hasGlyph(c);
+	public (int index, bool found) getGlyphIndex(char c, int defaultVal = 0) 
+		=> _glyphIndexes.getGlyphIndex(c, defaultVal);
 
 	/*
 	In source data, lowest bit is right-most pixel, and scanlines continue from up to down. 
@@ -43,16 +37,6 @@ public class GlyphData{
 		_glyphHeight = glyphHeight_;
 		_numGlyphs = numGlyphs_;
 		_data = new BitArray(numTotalBits, false);
-	}
-
-	void buildGlyphIndexes(string symbols_){
-		_characters = symbols_;
-		_glyphIndexes.Clear();
-		for(int i = 0; i < _characters.Length; i++){
-			if (!_glyphIndexes.TryAdd(_characters[i], i)){
-				Debug.LogWarning($"Duplicate symbol {_characters[i]} found at position {i}");
-			}
-		}
 	}
 
 	public bool isValidGlyphIndex(int glyphIndex){
@@ -120,13 +104,13 @@ public class GlyphData{
 
 	public GlyphData(int glyphWidth_, int glyphHeight_, string symbols_, int[] srcData_){
 		initBitArray(glyphWidth_, glyphHeight_, symbols_.Length);
-		buildGlyphIndexes(symbols_);
+		_glyphIndexes = new GlyphIndexes(symbols_);
 		loadInts(srcData_);
 	}
 
 	public GlyphData(int glyphWidth_, int glyphHeight_, string symbols_, byte[] srcData_){
 		initBitArray(glyphWidth_, glyphHeight_, symbols_.Length);
-		buildGlyphIndexes(symbols_);
+		_glyphIndexes = new GlyphIndexes(symbols_);
 		loadBytes(srcData_);
 	}
 }
