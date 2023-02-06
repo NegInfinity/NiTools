@@ -34,21 +34,21 @@ public class RasterMeshText: System.IDisposable{
 		List<Vector2> uvs = new();
 
 		(Vector3 u, Vector3 v) getUvVectors(Vector3 n){
-			(Vector3 u, Vector3 v) getBaseUv(Vector3 n, Vector3 startU){
-				var u = startU;
-				u = Vector3.ProjectOnPlane(u, n).normalized;
-				var v = Vector3.Cross(u, n);
+			(Vector3 u, Vector3 v) getBaseUv(Vector3 n, Vector3 startV){
+				var v = startV;
+				v = Vector3.ProjectOnPlane(v, n).normalized;
+				var u = Vector3.Cross(n, v);
 				return (u, v);
 			}
-			var result = getBaseUv(n, Vector3.right);
-			if (result.v != Vector3.zero)
-				return (result.u, result.v.normalized);
+			var result = getBaseUv(n, Vector3.up);
+			if (result.u != Vector3.zero)
+				return (result.u.normalized, result.v);
 			result = getBaseUv(n, Vector3.forward);
 			return (result.u, result.v.normalized);
 		}
 
 		Vector2 calcTexCoords(Vector3 p, (Vector3 u, Vector3 v) uv){
-			return new Vector2(Vector3.Dot(p, uv.u), Vector3.Dot(p, uv.v));
+			return new Vector2(Vector3.Dot(p, uv.u)*0.5f + 0.5f, Vector3.Dot(p, uv.v)*0.5f + 0.5f);
 		}
 
 		Vector3 vec3(float x, float y, float z){
